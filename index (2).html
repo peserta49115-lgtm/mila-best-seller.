@@ -1,0 +1,532 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MILA BEST SELLER</title>
+<style>
+:root{--bg:#f5f3ff;--card:#fff;--ink:#25213a;--muted:#706b83;--primary:#7057d9;--line:#e7e2f3}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(135deg,#f5f3ff,#fff7fb);font-family:Arial,sans-serif;color:var(--ink)}
+.wrap{max-width:1050px;margin:auto;padding:24px 16px 48px}
+.hero{text-align:center;margin:12px 0 24px}
+.hero h1{margin:0 0 8px;font-size:clamp(27px,5vw,38px)}
+.hero p{color:var(--muted)}
+.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
+.card{background:white;border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 8px 25px #35266b0b}
+h2{font-size:18px;margin:0 0 14px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+label{display:block;font-size:13px;font-weight:bold;color:var(--muted);margin-bottom:6px}
+input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:15px}
+.stage{position:relative;background:#171522;border-radius:14px;overflow:hidden;aspect-ratio:4/3;display:grid;place-items:center}
+video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+#photoPreview{max-width:100%;max-height:100%;object-fit:contain;display:none}
+.placeholder{color:#ddd8ed;text-align:center;padding:20px;position:absolute}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+button,.filelabel{border:0;border-radius:10px;padding:11px 15px;background:var(--primary);color:white;font-weight:bold;cursor:pointer;font-size:14px}
+button.secondary,.filelabel.secondary{background:#eeeafb;color:#493b91}
+button:disabled{opacity:.45;cursor:not-allowed}
+.filelabel input{display:none}
+.status{font-size:13px;color:var(--muted);margin:12px 0;min-height:18px}
+.result-main{border-radius:14px;padding:16px;background:#f3f0ff;text-align:center;margin-bottom:14px}
+.emoji{font-size:42px}
+.dominant{font-size:22px;font-weight:800;margin:4px}
+.small{font-size:12px;color:var(--muted)}
+.barrow{margin:14px 0}
+.barhead{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px}
+.track{height:11px;background:#eeeaf5;border-radius:20px;overflow:hidden}
+.fill{height:100%;width:0%;border-radius:20px;transition:width .25s}
+.happy{background:#22a06b}
+.sad{background:#5488df}
+.angry{background:#e36b62}
+.note{font-size:12px;line-height:1.5;color:var(--muted);background:#faf9fd;padding:11px;border-radius:10px;margin-top:14px}
+.tablewrap{overflow:auto;margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:650px}
+th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);background:#faf9fd}
+.tableactions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.tableactions button{font-size:13px}
+.config{margin-top:18px}
+.config input{margin:8px 0 10px}
+.hidden{display:none!important}
+@media(max-width:760px){
+.layout{grid-template-columns:1fr}
+.fields{grid-template-columns:1fr}
+.wrap{padding:16px 12px 32px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header class="hero">
+<h1>😊 MILA BEST SELLER</h1>
+<p>Media pembelajaran untuk mengamati pola ekspresi wajah</p>
+</header>
+
+<main class="layout">
+<section class="card">
+<h2>1. Identitas dan pengambilan gambar</h2>
+
+<div class="fields">
+<div>
+<label for="studentName">Nama siswa</label>
+<input id="studentName" placeholder="Masukkan nama siswa">
+</div>
+<div>
+<label for="studentClass">Kelas</label>
+<input id="studentClass" placeholder="Contoh: VII F">
+</div>
+</div>
+
+<div class="stage">
+<video id="video" autoplay muted playsinline class="hidden"></video>
+<img id="photoPreview" alt="Pratinjau foto">
+<div id="placeholder" class="placeholder">Kamera atau foto akan tampil di sini</div>
+</div>
+
+<div class="controls">
+<button id="startCamera">Aktifkan kamera</button>
+<button id="capture" class="secondary" disabled>Ambil gambar & ukur</button>
+
+<label class="filelabel secondary">
+Pilih foto
+<input id="photoInput" type="file" accept="image/*">
+</label>
+
+<button id="analyzePhoto" class="secondary" disabled>Ukur foto</button>
+<button id="stopCamera" class="secondary" disabled>Matikan kamera</button>
+</div>
+
+<p id="status" class="status">Memuat model deteksi ekspresi… Pastikan internet aktif.</p>
+</section>
+
+<section class="card">
+<h2>2. Hasil pengukuran</h2>
+
+<div class="result-main">
+<div class="emoji" id="resultEmoji">🙂</div>
+<div class="dominant" id="dominant">Belum ada hasil</div>
+<div class="small" id="resultCaption">Ambil gambar atau pilih foto terlebih dahulu.</div>
+</div>
+
+<div class="barrow">
+<div class="barhead"><span>😊 Senang</span><strong id="happyPct">—</strong></div>
+<div class="track"><div class="fill happy" id="happyBar"></div></div>
+</div>
+
+<div class="barrow">
+<div class="barhead"><span>😢 Sedih</span><strong id="sadPct">—</strong></div>
+<div class="track"><div class="fill sad" id="sadBar"></div></div>
+</div>
+
+<div class="barrow">
+<div class="barhead"><span>😠 Marah</span><strong id="angryPct">—</strong></div>
+<div class="track"><div class="fill angry" id="angryBar"></div></div>
+</div>
+
+<div class="controls">
+<button id="saveResult" disabled>Simpan hasil ke rekap</button>
+</div>
+
+<div class="note">
+<b>Catatan:</b> Persentase merupakan skor prediksi model dari pola visual wajah, bukan ukuran pasti perasaan seseorang. Hasil dapat keliru karena pencahayaan, posisi wajah, kualitas gambar, dan perbedaan ekspresi. Gunakan sebagai bahan diskusi pembelajaran, bukan untuk memberi label atau menilai kondisi emosional siswa.
+</div>
+</section>
+</main>
+
+<section class="card config">
+<h2>3. Rekap hasil siswa</h2>
+<p class="small">Hasil tersimpan di perangkat ini. Ekspor CSV untuk membuka rekap di Excel atau unggah ke Google Sheets setelah URL Apps Script dipasang.</p>
+
+<div class="tablewrap">
+<table>
+<thead>
+<tr>
+<th>Waktu</th>
+<th>Nama</th>
+<th>Kelas</th>
+<th>Dominan</th>
+<th>Senang</th>
+<th>Sedih</th>
+<th>Marah</th>
+</tr>
+</thead>
+<tbody id="records">
+<tr><td colspan="7">Belum ada data.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="tableactions">
+<button id="exportCsv" class="secondary">Unduh rekap CSV</button>
+<button id="syncAll">Kirim rekap ke Google Sheets</button>
+<button id="clearRecords" class="secondary">Hapus rekap di perangkat</button>
+</div>
+
+<div class="config">
+<label for="appsScriptUrl">URL Web App Google Apps Script (opsional)</label>
+<input id="appsScriptUrl" placeholder="https://script.google.com/macros/s/.../exec">
+<button id="saveUrl" class="secondary">Simpan URL</button>
+<p class="small">Jika URL belum diisi, data tetap tersimpan lokal dan bisa diunduh sebagai CSV.</p>
+</div>
+</section>
+</div>
+
+<script type="module">
+import Human from 'https://cdn.jsdelivr.net/npm/@vladmandic/human@3.3.6/dist/human.esm.js';
+
+const config = {
+backend: 'webgl',
+modelBasePath: 'https://cdn.jsdelivr.net/npm/@vladmandic/human@3.3.6/models/',
+face: {
+enabled: true,
+detector: {rotation:true,maxDetected:1,minConfidence:0.3},
+mesh: {enabled:false},
+iris: {enabled:false},
+description: {enabled:false},
+emotion: {enabled:true}
+},
+body:{enabled:false},
+hand:{enabled:false},
+object:{enabled:false},
+gesture:{enabled:false}
+};
+
+const human = new Human(config);
+const $ = id => document.getElementById(id);
+const video = $('video');
+const preview = $('photoPreview');
+const placeholder = $('placeholder');
+
+let stream = null;
+let selectedImage = null;
+let latest = null;
+let modelReady = false;
+
+let rows = JSON.parse(localStorage.getItem('ekspresiku_records') || '[]');
+
+const emotionMap = {
+happy:{label:'Senang',emoji:'😊'},
+sad:{label:'Sedih',emoji:'😢'},
+angry:{label:'Marah',emoji:'😠'}
+};
+
+function setStatus(message){
+$('status').textContent = message;
+}
+
+function escapeHtml(s){
+return String(s).replace(/[&<>"']/g,c=>({
+'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}[c]));
+}
+
+function updateTable(){
+const body = $('records');
+
+if(!rows.length){
+body.innerHTML='<tr><td colspan="7">Belum ada data.</td></tr>';
+return;
+}
+
+body.innerHTML=rows.map(r=>`
+<tr>
+<td>${escapeHtml(r.time)}</td>
+<td>${escapeHtml(r.name)}</td>
+<td>${escapeHtml(r.klass)}</td>
+<td>${escapeHtml(r.dominant)}</td>
+<td>${r.happy}%</td>
+<td>${r.sad}%</td>
+<td>${r.angry}%</td>
+</tr>`).join('');
+}
+
+function pct(x){
+return Math.round((Number(x)||0)*1000)/10;
+}
+
+function showResult(scores){
+const values={
+happy:Math.max(0,scores.happy||0),
+sad:Math.max(0,scores.sad||0),
+angry:Math.max(0,scores.angry||0)
+};
+
+const total=Object.values(values).reduce((a,b)=>a+b,0);
+
+if(!total){
+setStatus('Model belum menemukan skor untuk tiga ekspresi tersebut. Coba foto lain.');
+return;
+}
+
+const normalized=Object.fromEntries(
+Object.entries(values).map(([k,v])=>[k,v/total])
+);
+
+const dominantKey=Object.keys(normalized).sort(
+(a,b)=>normalized[b]-normalized[a]
+)[0];
+
+const info=emotionMap[dominantKey];
+
+const result={
+...Object.fromEntries(
+Object.entries(normalized).map(([k,v])=>[k,pct(v)])
+),
+dominant:info.label,
+emoji:info.emoji
+};
+
+latest=result;
+
+$('resultEmoji').textContent=info.emoji;
+$('dominant').textContent=info.label;
+$('resultCaption').textContent='Ekspresi dengan skor prediksi tertinggi pada gambar ini.';
+
+['happy','sad','angry'].forEach(k=>{
+$(k+'Pct').textContent=result[k].toFixed(1)+'%';
+$(k+'Bar').style.width=result[k]+'%';
+});
+
+$('saveResult').disabled=false;
+setStatus('Pengukuran selesai. Periksa hasilnya sebelum menyimpan.');
+}
+
+async function analyze(source){
+if(!modelReady){
+setStatus('Model masih dimuat. Tunggu sebentar lalu coba lagi.');
+return;
+}
+
+setStatus('Sedang menganalisis gambar…');
+
+try{
+const result=await human.detect(source);
+
+if(!result.face||!result.face.length){
+setStatus('Wajah belum terdeteksi. Pastikan wajah terlihat jelas dan pencahayaan cukup.');
+return;
+}
+
+const emotions=result.face[0].emotion||[];
+const scores={};
+
+emotions.forEach(e=>{
+scores[e.emotion]=e.score;
+});
+
+showResult(scores);
+
+}catch(err){
+console.error(err);
+setStatus('Pengukuran gagal. Coba muat ulang halaman atau gunakan foto lain.');
+}
+}
+
+$('startCamera').onclick=async()=>{
+try{
+stream=await navigator.mediaDevices.getUserMedia({
+video:{facingMode:'user'},
+audio:false
+});
+
+video.srcObject=stream;
+video.classList.remove('hidden');
+preview.style.display='none';
+placeholder.classList.add('hidden');
+
+$('capture').disabled=false;
+$('stopCamera').disabled=false;
+
+setStatus('Kamera aktif. Posisikan wajah di tengah, lalu ambil gambar.');
+}catch(e){
+setStatus('Kamera tidak dapat diakses. Izinkan akses kamera atau gunakan pilihan foto.');
+}
+};
+
+$('stopCamera').onclick=()=>{
+if(stream)stream.getTracks().forEach(t=>t.stop());
+
+stream=null;
+video.srcObject=null;
+video.classList.add('hidden');
+
+$('capture').disabled=true;
+$('stopCamera').disabled=true;
+
+if(!selectedImage)placeholder.classList.remove('hidden');
+
+setStatus('Kamera dimatikan.');
+};
+
+$('capture').onclick=async()=>{
+if(!video.videoWidth)return;
+
+const canvas=document.createElement('canvas');
+canvas.width=video.videoWidth;
+canvas.height=video.videoHeight;
+
+const ctx=canvas.getContext('2d');
+ctx.translate(canvas.width,0);
+ctx.scale(-1,1);
+ctx.drawImage(video,0,0);
+
+selectedImage=canvas;
+await analyze(canvas);
+};
+
+$('photoInput').onchange=e=>{
+const file=e.target.files[0];
+if(!file)return;
+
+const img=new Image();
+
+img.onload=()=>{
+selectedImage=img;
+preview.src=img.src;
+preview.style.display='block';
+
+video.classList.add('hidden');
+placeholder.classList.add('hidden');
+
+$('analyzePhoto').disabled=false;
+
+setStatus('Foto siap. Tekan Ukur foto untuk memulai.');
+};
+
+img.onerror=()=>{
+setStatus('Foto tidak dapat dibuka. Pilih file gambar lain.');
+};
+
+img.src=URL.createObjectURL(file);
+};
+
+$('analyzePhoto').onclick=()=>{
+if(selectedImage)analyze(selectedImage);
+};
+
+$('saveResult').onclick=async()=>{
+if(!latest)return;
+
+const name=$('studentName').value.trim();
+const klass=$('studentClass').value.trim();
+
+if(!name||!klass){
+setStatus('Isi nama siswa dan kelas sebelum menyimpan.');
+return;
+}
+
+const row={
+time:new Date().toLocaleString('id-ID'),
+name,
+klass,
+dominant:latest.dominant,
+happy:latest.happy.toFixed(1),
+sad:latest.sad.toFixed(1),
+angry:latest.angry.toFixed(1)
+};
+
+rows.unshift(row);
+
+localStorage.setItem('ekspresiku_records',JSON.stringify(rows));
+updateTable();
+
+setStatus('Hasil tersimpan di rekap perangkat ini.');
+
+if($('appsScriptUrl').value.trim()){
+await sendRows([row]);
+}
+};
+
+async function sendRows(data){
+const url=$('appsScriptUrl').value.trim();
+
+if(!url){
+setStatus('Isi URL Apps Script terlebih dahulu.');
+return false;
+}
+
+try{
+await fetch(url,{
+method:'POST',
+mode:'no-cors',
+headers:{'Content-Type':'text/plain;charset=utf-8'},
+body:JSON.stringify({records:data})
+});
+
+setStatus('Data dikirim ke Google Sheets. Periksa spreadsheet untuk memastikan data masuk.');
+return true;
+
+}catch(e){
+setStatus('Pengiriman gagal. Periksa URL dan deployment Apps Script.');
+return false;
+}
+}
+
+$('syncAll').onclick=()=>sendRows(rows);
+
+$('saveUrl').onclick=()=>{
+localStorage.setItem('ekspresiku_apps_script_url',$('appsScriptUrl').value.trim());
+setStatus('URL Apps Script disimpan di perangkat ini.');
+};
+
+$('appsScriptUrl').value=
+localStorage.getItem('ekspresiku_apps_script_url')||'';
+
+$('exportCsv').onclick=()=>{
+if(!rows.length){
+setStatus('Belum ada data untuk diunduh.');
+return;
+}
+
+const headers=[
+'Waktu','Nama','Kelas','Ekspresi dominan',
+'Senang (%)','Sedih (%)','Marah (%)'
+];
+
+const csv=[
+headers,
+...rows.map(r=>[
+r.time,r.name,r.klass,r.dominant,
+r.happy,r.sad,r.angry
+])
+].map(line=>
+line.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')
+).join('\r\n');
+
+const blob=new Blob(['\ufeff'+csv],{
+type:'text/csv;charset=utf-8;'
+});
+
+const a=document.createElement('a');
+a.href=URL.createObjectURL(blob);
+a.download='rekap-ekspresiku.csv';
+a.click();
+
+URL.revokeObjectURL(a.href);
+};
+
+$('clearRecords').onclick=()=>{
+if(!confirm('Hapus seluruh rekap yang tersimpan di perangkat ini?'))return;
+
+rows=[];
+localStorage.removeItem('ekspresiku_records');
+updateTable();
+setStatus('Rekap lokal dihapus.');
+};
+
+updateTable();
+
+human.load().then(()=>{
+modelReady=true;
+setStatus('Model siap. Aktifkan kamera atau pilih foto untuk mulai.');
+}).catch(err=>{
+console.error(err);
+setStatus('Model gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.');
+});
+</script>
+
+</body>
+</html>
